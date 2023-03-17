@@ -1,9 +1,11 @@
-import os
+import random
+import pickle
 from gym_maze.envs.maze_view_2d import Maze
 import numpy as np
-import requests
 import json
 from collections import deque
+from tqdm import tqdm
+
 
 def get_move(cell, r, c, rows_length, cols_length):
     next_state = None
@@ -90,12 +92,41 @@ def validate_maze(maze):
 if __name__ == "__main__":
     # DO NOT CHANGE
     # USE ONLY FOR GENERATING RANDOM/SAMPLE MAZES
-    while(True):
-        maze = Maze(maze_size=(10, 10), rescue_item_locations=[(10,10)])
-        is_validated = validate_maze(maze.maze_cells)
-        if is_validated:
-            break
+    maze_size = 10
+    for j in tqdm(range(100)):
+        maze_id = j
+        while True:
+            maze = Maze(
+                maze_size=(maze_size, maze_size), rescue_item_locations=[(10, 10)]
+            )
+            is_validated = validate_maze(maze.maze_cells)
+            if is_validated:
+                break
 
-    print(maze.maze_cells)
-    np.save("../../sample_maze.npy", maze.maze_cells)
+        to_save = {}
+        to_save["maze"] = maze.maze_cells
 
+        for i in range(50):
+            riddle_types = ["server", "cipher", "pcap", "captcha"]
+            rescue_items_dict = {}
+            random.shuffle(riddle_types)
+
+            for riddle_type in riddle_types:
+                position = (
+                    random.randrange(0, maze_size - 1),
+                    random.randrange(0, maze_size - 1),
+                )
+                while (
+                    position == (0, 0)
+                    or position == (9, 9)
+                    or position in rescue_items_dict
+                ):
+                    position = (
+                        random.randrange(0, maze_size - 1),
+                        random.randrange(0, maze_size - 1),
+                    )
+                rescue_items_dict[position] = riddle_type
+            to_save["rescue_items"] = rescue_items_dict
+            # pickle.dump(
+            #     to_save, open("./mazes/maze_{}_{}.p".format(str(maze_id), str(i)), "wb")
+            # )

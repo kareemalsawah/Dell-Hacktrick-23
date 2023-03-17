@@ -7,27 +7,45 @@ import sys
 
 
 class MazeView2D:
-
-    def __init__(self, maze_name="Maze2D", maze_file_path=None, maze_cells=None,
-                 maze_size=(10, 10), screen_size=(600, 600),
-                 has_loops=False, num_rescue_items=0, enable_render=True, rescue_item_locations= None):
+    def __init__(
+        self,
+        maze_name="Maze2D",
+        maze_file_path=None,
+        maze_cells=None,
+        maze_size=(10, 10),
+        screen_size=(600, 600),
+        has_loops=False,
+        num_rescue_items=0,
+        enable_render=False,
+        rescue_item_locations=None,
+    ):
 
         # PyGame configurations
-        pygame.init()
-        pygame.display.set_caption(maze_name)
-        self.clock = pygame.time.Clock()
         self.__game_over = False
+        enable_render = False
         self.__enable_render = enable_render
-        
+        if enable_render:
+            pygame.init()
+            pygame.display.set_caption(maze_name)
+            self.clock = pygame.time.Clock()
+
         ## rescue_items
         self.__rescued_items = 0
         self.rescue_item_locations = rescue_item_locations
-
         # Load a maze
-        if hasattr(maze_cells, 'shape'):
-            self.__maze = Maze(maze_cells=maze_cells, has_loops=has_loops, num_rescue_items=num_rescue_items, rescue_item_locations=self.rescue_item_locations)
+        if hasattr(maze_cells, "shape"):
+            self.__maze = Maze(
+                maze_cells=maze_cells,
+                has_loops=has_loops,
+                num_rescue_items=num_rescue_items,
+                rescue_item_locations=self.rescue_item_locations,
+            )
         else:
-            self.__maze = Maze(maze_size=maze_size, num_rescue_items=num_rescue_items, rescue_item_locations=self.rescue_item_locations)
+            self.__maze = Maze(
+                maze_size=maze_size,
+                num_rescue_items=num_rescue_items,
+                rescue_item_locations=self.rescue_item_locations,
+            )
 
         self.maze_size = self.__maze.maze_size
         if self.__enable_render is True:
@@ -51,7 +69,14 @@ class MazeView2D:
 
             # Create a layer for the maze
             self.maze_layer = pygame.Surface(self.screen.get_size()).convert_alpha()
-            self.maze_layer.fill((0, 0, 0, 0,))
+            self.maze_layer.fill(
+                (
+                    0,
+                    0,
+                    0,
+                    0,
+                )
+            )
 
             # self.background.blit(self.maze_background, (-2,-2))
 
@@ -69,7 +94,6 @@ class MazeView2D:
             # show the goal
             self.__draw_goal()
 
-
     def update(self, mode="human"):
         try:
             img_output = self.__view_update(mode)
@@ -86,23 +110,28 @@ class MazeView2D:
             self.__game_over = True
             if self.__enable_render is True:
                 pygame.quit()
-            print(self.__rescued_items, "rescue items")
+            # print(self.__rescued_items, "rescue items")
             pygame.quit()
         except Exception:
             pass
 
-
     def get_rescue_items_locations(self):
         distances = []
         directions = []
-        #temp = self.keys
+        # temp = self.keys
+        # print("Items:")
+        # print(self.rescue_item_locations)
         for rescue_item in self.maze.rescue_items_list:
+            # print(rescue_item.location)
             # rescue_item.location.remove from temp
             if rescue_item.rescued:
                 distance = -1
-                direction = [0,0]
+                direction = [0, 0]
             else:
-                distance = sum(abs(val1-val2) for val1, val2 in zip(self.robot, rescue_item.location)) 
+                distance = sum(
+                    abs(val1 - val2)
+                    for val1, val2 in zip(self.robot, rescue_item.location)
+                )
                 x_direction = self.robot[0] - rescue_item.location[0]
                 y_direction = self.robot[1] - rescue_item.location[1]
 
@@ -115,13 +144,13 @@ class MazeView2D:
 
                 if y_direction < 0:
                     y_direction = 1
-                elif y_direction > 1:
+                elif y_direction > 0:
                     y_direction = -1
                 else:
                     y_direction = 0
 
                 direction = [x_direction, y_direction]
-            directions.append(direction) 
+            directions.append(direction)
             distances.append(int(distance))
 
         # for item in temp:
@@ -131,13 +160,14 @@ class MazeView2D:
     def reset_rescue_items(self):
         self.__rescued_items = 0
         for rescue_item in self.maze.rescue_items_list:
-            rescue_item.rescued = False 
-
+            rescue_item.rescued = False
 
     def move_robot(self, dir):
         if dir not in self.__maze.COMPASS.keys():
-            raise ValueError("dir cannot be %s. The only valid dirs are %s."
-                             % (str(dir), str(self.__maze.COMPASS.keys())))
+            raise ValueError(
+                "dir cannot be %s. The only valid dirs are %s."
+                % (str(dir), str(self.__maze.COMPASS.keys()))
+            )
 
         if self.__maze.is_open(self.__robot, dir):
             is_teleport = False
@@ -169,34 +199,43 @@ class MazeView2D:
             self.__draw_robot()
             # update the screen
             self.screen.blit(self.background, (0, 0))
-            self.screen.blit(self.maze_layer,(0, 0))
+            self.screen.blit(self.maze_layer, (0, 0))
 
-            
             if mode == "human":
                 pygame.display.flip()
 
-            return np.flipud(np.rot90(pygame.surfarray.array3d(pygame.display.get_surface())))
+            return np.flipud(
+                np.rot90(pygame.surfarray.array3d(pygame.display.get_surface()))
+            )
 
     def __draw_maze(self):
-        
+
         if self.__enable_render is False:
             return
-        
+
         line_colour = (0, 0, 0, 255)
 
         # drawing the horizontal lines
         for y in range(self.maze.MAZE_H + 1):
-            pygame.draw.line(self.maze_layer, line_colour, (0, y * self.CELL_H),
-                             (self.SCREEN_W, y * self.CELL_H))
+            pygame.draw.line(
+                self.maze_layer,
+                line_colour,
+                (0, y * self.CELL_H),
+                (self.SCREEN_W, y * self.CELL_H),
+            )
 
         # drawing the vertical lines
         for x in range(self.maze.MAZE_W + 1):
-            pygame.draw.line(self.maze_layer, line_colour, (x * self.CELL_W, 0),
-                             (x * self.CELL_W, self.SCREEN_H))
+            pygame.draw.line(
+                self.maze_layer,
+                line_colour,
+                (x * self.CELL_W, 0),
+                (x * self.CELL_W, self.SCREEN_H),
+            )
 
         # breaking the walls
         for x in range(len(self.maze.maze_cells)):
-            for y in range (len(self.maze.maze_cells[x])):
+            for y in range(len(self.maze.maze_cells[x])):
                 # check the which walls are open in each cell
                 walls_status = self.maze.get_walls_status(self.maze.maze_cells[x, y])
                 dirs = ""
@@ -209,7 +248,7 @@ class MazeView2D:
 
         if self.__enable_render is False:
             return
-        
+
         dx = x * self.CELL_W
         dy = y * self.CELL_H
 
@@ -238,13 +277,12 @@ class MazeView2D:
 
         if self.__enable_render is False:
             return
-        
+
         x = int(self.__robot[0] * self.CELL_W + self.CELL_W * 0.5 + 0.5)
         y = int(self.__robot[1] * self.CELL_H + self.CELL_H * 0.5 + 0.5)
-        r = int(min(self.CELL_W, self.CELL_H)/5 + 0.5)
+        r = int(min(self.CELL_W, self.CELL_H) / 5 + 0.5)
 
         pygame.draw.circle(self.maze_layer, colour + (transparency,), (x, y), r)
-        
 
     def __draw_entrance(self, colour=(0, 0, 150), transparency=235):
 
@@ -258,13 +296,15 @@ class MazeView2D:
 
         if self.__enable_render is False:
             return
-        
+
         colour_range = np.linspace(0, 255, len(self.maze.rescue_items_list), dtype=int)
         colour_i = 0
         for rescue_item in self.maze.rescue_items_list:
-            colour = ((100 - colour_range[colour_i])% 255, colour_range[colour_i], 0)
+            colour = ((100 - colour_range[colour_i]) % 255, colour_range[colour_i], 0)
             colour_i += 1
-            self.__colour_cell(rescue_item.location, colour=colour, transparency=transparency)
+            self.__colour_cell(
+                rescue_item.location, colour=colour, transparency=transparency
+            )
 
     def __colour_cell(self, cell, colour, transparency, w_cell=0, h_cell=0):
 
@@ -272,11 +312,9 @@ class MazeView2D:
             return
 
         if not (isinstance(cell, (list, tuple, np.ndarray)) and len(cell) == 2):
-        
+
             raise TypeError("cell must a be a tuple, list, or numpy array of size 2")
 
-
-        
         x = int(cell[0] * self.CELL_W + 0.5 + 1)
         y = int(cell[1] * self.CELL_H + 0.5 + 1)
         w = int(self.CELL_W + 0.5 - 1 + w_cell)
@@ -298,12 +336,11 @@ class MazeView2D:
     @property
     def goal(self):
         return self.__goal
-    
+
     @property
     def rescued_items(self):
         return self.__rescued_items
-    
-    
+
     def increment_rescue_items(self):
         self.__rescued_items += 1
 
@@ -334,14 +371,16 @@ class MazeView2D:
 
 class Maze:
 
-    COMPASS = {
-        "N": (0, -1),
-        "E": (1, 0),
-        "S": (0, 1),
-        "W": (-1, 0)
-    }
+    COMPASS = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
 
-    def __init__(self, maze_cells=None, maze_size=(10,10), has_loops=True, num_rescue_items=0, rescue_item_locations=None):
+    def __init__(
+        self,
+        maze_cells=None,
+        maze_size=(10, 10),
+        has_loops=True,
+        num_rescue_items=0,
+        rescue_item_locations=None,
+    ):
 
         # maze member variables
         self.maze_cells = maze_cells
@@ -352,8 +391,11 @@ class Maze:
         self.rescue_item_locations = rescue_item_locations
 
         # Use existing one if exists
-        if(hasattr(self.maze_cells, 'shape')):
-            if isinstance(self.maze_cells, (np.ndarray, np.generic)) and len(self.maze_cells.shape) == 2:
+        if hasattr(self.maze_cells, "shape"):
+            if (
+                isinstance(self.maze_cells, (np.ndarray, np.generic))
+                and len(self.maze_cells.shape) == 2
+            ):
                 self.maze_size = tuple(maze_cells.shape)
                 locations = self.rescue_item_locations
                 self.__set_random_rescue_items(locations)
@@ -367,7 +409,6 @@ class Maze:
             self.maze_size = maze_size
 
             self._generate_maze()
-
 
     def save_maze(self, file_path):
 
@@ -398,7 +439,10 @@ class Maze:
         self.maze_cells = np.zeros(self.maze_size, dtype=int)
 
         # Initializing constants and variables needed for maze generation
-        current_cell = (random.randint(0, self.MAZE_W-1), random.randint(0, self.MAZE_H-1))
+        current_cell = (
+            random.randint(0, self.MAZE_W - 1),
+            random.randint(0, self.MAZE_H - 1),
+        )
         num_cells_visited = 1
         cell_stack = [current_cell]
 
@@ -418,7 +462,7 @@ class Maze:
                 if 0 <= x1 < self.MAZE_W and 0 <= y1 < self.MAZE_H:
                     # if all four walls still exist
                     if self.all_walls_intact(self.maze_cells[x1, y1]):
-                    #if self.num_walls_broken(self.maze_cells[x1, y1]) <= 1:
+                        # if self.num_walls_broken(self.maze_cells[x1, y1]) <= 1:
                         neighbours[dir_key] = (x1, y1)
 
             # if there is a neighbour
@@ -428,7 +472,9 @@ class Maze:
                 x1, y1 = neighbours[dir]
 
                 # knock down the wall between the current cell and the selected neighbour
-                self.maze_cells[x1, y1] = self.__break_walls(self.maze_cells[x1, y1], self.__get_opposite_wall(dir))
+                self.maze_cells[x1, y1] = self.__break_walls(
+                    self.maze_cells[x1, y1], self.__get_opposite_wall(dir)
+                )
 
                 # push the current cell location to the stack
                 cell_stack.append(current_cell)
@@ -447,31 +493,31 @@ class Maze:
 
     def __break_random_walls(self, percent):
         # find some random cells to break
-        num_cells = int(round(self.MAZE_H*self.MAZE_W*percent))
-        cell_ids = random.sample(range(self.MAZE_W*self.MAZE_H), num_cells)
+        num_cells = int(round(self.MAZE_H * self.MAZE_W * percent))
+        cell_ids = random.sample(range(self.MAZE_W * self.MAZE_H), num_cells)
 
         # for each of those walls
         for cell_id in cell_ids:
             x = cell_id % self.MAZE_H
-            y = int(cell_id/self.MAZE_H)
+            y = int(cell_id / self.MAZE_H)
 
             # randomize the compass order
             dirs = random.sample(list(self.COMPASS.keys()), len(self.COMPASS))
             for dir in dirs:
                 # break the wall if it's not already open
                 if self.is_breakable((x, y), dir):
-                    self.maze_cells[x, y] = self.__break_walls(self.maze_cells[x, y], dir)
+                    self.maze_cells[x, y] = self.__break_walls(
+                        self.maze_cells[x, y], dir
+                    )
                     break
 
     def __set_random_rescue_items(self, locations):
-
         for location in locations:
             count = 1
             item_class = "x"
             rescue_item = RescueItem(item_class, count, location)
             self.__rescue_items_dict[location] = rescue_item
             self.__rescue_items_list.append(rescue_item)
-
 
     def is_open(self, cell_id, dir):
         # check if it would be out-of-bound
@@ -481,8 +527,14 @@ class Maze:
         # if cell is still within bounds after the move
         if self.is_within_bound(x1, y1):
             # check if the wall is opened
-            this_wall = bool(self.get_walls_status(self.maze_cells[cell_id[0], cell_id[1]])[dir])
-            other_wall = bool(self.get_walls_status(self.maze_cells[x1, y1])[self.__get_opposite_wall(dir)])
+            this_wall = bool(
+                self.get_walls_status(self.maze_cells[cell_id[0], cell_id[1]])[dir]
+            )
+            other_wall = bool(
+                self.get_walls_status(self.maze_cells[x1, y1])[
+                    self.__get_opposite_wall(dir)
+                ]
+            )
             return this_wall or other_wall
         return False
 
@@ -510,7 +562,7 @@ class Maze:
     def get_rescue_item(self, cell):
         if cell in self.__rescue_items_dict:
             return self.__rescue_items_dict[cell]
-        return None       
+        return None
 
     @property
     def MAZE_W(self):
@@ -523,10 +575,10 @@ class Maze:
     @classmethod
     def get_walls_status(cls, cell):
         walls = {
-            "N" : (cell & 0x1) >> 0,
-            "E" : (cell & 0x2) >> 1,
-            "S" : (cell & 0x4) >> 2,
-            "W" : (cell & 0x8) >> 3,
+            "N": (cell & 0x1) >> 0,
+            "E": (cell & 0x2) >> 1,
+            "S": (cell & 0x4) >> 2,
+            "W": (cell & 0x8) >> 3,
         }
         return walls
 
@@ -578,8 +630,8 @@ class Maze:
 
         return opposite_dirs
 
-class RescueItem:
 
+class RescueItem:
     def __init__(self, item_class, count, location):
         self.location = location
         # type of rescue item such as children, adults etc.
@@ -593,10 +645,5 @@ class RescueItem:
         return self.rescued
 
 
-
-
-
 if __name__ == "__main__":
     pass
-
-

@@ -5,6 +5,7 @@ import random
 import json
 import requests
 import copy
+import time
 
 from riddle_solvers import *
 
@@ -15,7 +16,7 @@ server_ip = "16.170.85.45"
 
 from solution import AlgorithmicAgent
 
-agent = AlgorithmicAgent(visualize=True)
+agent = AlgorithmicAgent(visualize=False)
 
 
 def move(agent_id, action):
@@ -76,10 +77,13 @@ def submission_inference(riddle_solvers):
 
         if not response.json()["riddleType"] == None:
             try:
+                tic = time.time()
                 solution = riddle_solvers[response.json()["riddleType"]](
                     response.json()["riddleQuestion"]
                 )
                 response = solve(agent_id, response.json()["riddleType"], solution)
+                toc = time.time()
+                print((toc-tic)*1000, " ms")
             except Exception:
                 print("Error in solving riddle")
                 raise Exception("helooz")
@@ -87,7 +91,7 @@ def submission_inference(riddle_solvers):
 
 if __name__ == "__main__":
 
-    # agent_id = "UaPI5yewWF"
+    agent_id = "YpL5hTnG2w"
     riddle_solvers = {
         "cipher": cipher_solver,
         "captcha": captcha_solver,

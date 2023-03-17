@@ -7,7 +7,7 @@ from gym_maze.envs.maze_manager import MazeManager
 from solution import AlgorithmicAgent
 
 
-agent = AlgorithmicAgent(visualize=True)
+agent = AlgorithmicAgent(visualize=False)
 # try:
 #     agent.graph.graph = pickle.load(open("map.pkl", "rb"))
 # except FileNotFoundError:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     maze["rescue_items"] = list(manager.rescue_items_dict.keys())
 
     MAX_T = 5000
-    RENDER_MAZE = not agent.visualize
+    RENDER_MAZE = False
 
     local_inference(riddle_solvers)
 
