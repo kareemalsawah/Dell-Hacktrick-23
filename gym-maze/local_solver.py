@@ -66,7 +66,19 @@ if __name__ == "__main__":
         "pcap": pcap_solver,
         "server": server_solver,
     }
-
+    sample_maze = [
+    [2, 4, 2, 2, 2, 4, 2, 2, 2, 4],
+    [4, 8, 1, 8, 4, 8, 2, 1, 4, 8],
+    [2, 4, 2, 1, 2, 4, 1, 8, 2, 4],
+    [4, 8, 1, 8, 4, 8, 2, 1, 4, 8],
+    [2, 4, 2, 1, 2, 4, 1, 8, 2, 4],
+    [4, 8, 1, 8, 2, 2, 2, 1, 4, 8],
+    [2, 4, 2, 1, 1, 4, 8, 4, 2, 4],
+    [4, 8, 1, 8, 8, 8, 1, 4, 4, 8],
+    [4, 2, 4, 2, 4, 1, 1, 4, 2, 4],
+    [2, 1, 2, 1, 2, 2, 1, 2, 1, 1],
+    ]
+    sample_maze = np.array(sample_maze).T
     manager = MazeManager()
     manager.init_maze(agent_id, maze_cells=sample_maze)
     env = manager.maze_map[agent_id]
