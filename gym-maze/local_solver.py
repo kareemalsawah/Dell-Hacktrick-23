@@ -36,10 +36,12 @@ def local_inference(riddle_solvers):
             solution = riddle_solvers[info["riddle_type"]](info["riddle_question"])
             toc = time.time()
             print(info["riddle_type"], toc - tic)
+            if info["riddle_type"] == "server":
+                print(type(solution))
+                print(solution)
             obv, reward, terminated, truncated, info = manager.solve_riddle(
                 info["riddle_type"], agent_id, solution
             )
-
         # THIS IS A SAMPLE TERMINATING CONDITION WHEN THE AGENT REACHES THE EXIT
         # IMPLEMENT YOUR OWN TERMINATING CONDITION
         # if np.array_equal(obv[0], (9, 9)):

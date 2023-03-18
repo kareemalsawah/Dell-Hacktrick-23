@@ -110,7 +110,7 @@ class MazeView2D:
             self.__game_over = True
             if self.__enable_render is True:
                 pygame.quit()
-            # print(self.__rescued_items, "rescue items")
+            print(self.__rescued_items, "rescue items")
             pygame.quit()
         except Exception:
             pass

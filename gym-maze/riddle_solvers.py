@@ -10,40 +10,53 @@ from PIL import Image
 
 from scapy.all import *
 from io import BytesIO
-from authlib.jose import jwt
+#from authlib.jose import jwt
 from amazoncaptcha import AmazonCaptcha
+import os
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+
+# from authlib.jose import jwt
+import base64
+#import json as js
+#from time import time
+import jwt
 
 
-def server_solver(question: str) -> str:
-    """
-    Solves the JWT server riddle
+new_token = {
+    "alg": "RS256",
+    "kty": "RSA",
+    "n": "rvhfkww7G2Plzu6oceAqXabHnD5Vm5ZHAqg_Q2f6mXzyl1AUP8SlzfVRKZDfxJvPKQ8fbONQhCoU4RSKdf8pXL0MG-Q5sh45E5dhOWvLQgb6Dbtb8EBLrpSmUowY39Vpx8MR-52fK3nBhNzNZCKwjEUea4mbyzormNtQbEQodb5HKqn7mM8KAhod8-4sh3cFi01320Atox-Ud1hhtj_WWGmXEHUKlODO5cPWFMXzI2w6cqxZJ6JMNLn0Z5hppyKquUtgQf2Vzl0HFEPsgF-RjyCUfXQ_GRF4dBP6tztqrYzFGcLZ2hqZLlg0ibSsGQOHHG1bx5dezaAGkhDRm-1uIQ",
+    "e": "AQAB",
+    "d": "ESHOseZDr1XjvZROt_-8Bjl7WAged8KKJ29z6lS3C-pZEonLwcaueXEoxkoiLu0Wpq2NZSsIyjgYnUVWnWEjmqoEEoMRRyiAbDOpWGb-mvN17nxG70pMXsa9Vl3TXa9W0TF_hESVvjsIwMqh7ckbwlBOPzdVItwKQshOops13vld8DvPNzmkbBL2Pnp7T39D0WSaaekiqJAo-xCDzGKvBNk7PDD8i7B4BWM-ptFYK4DCN0s2oxEQ1Qz-m0yPvRJ3luUytLxC0JSYDhirqZoOOgNYqWVKn4PU1oXC6rg1nT0qvHyeQJ738eJDer1Un3R-l7qEhjRjtwfv2RCtQqeqwQ",
+    "p": "6vmokKL9KghbVn0dbRQ0qYG1NbelK85ZqFgx3VnqkqqL2Iqb5Olp3ZN8D7kFmLEJyardPTOveKTb_2RlJuFg-OTSyPlAKnTewIlT9o28S3BZ9gsmjTnoiarkDlmvz2AxViGAMeo3HoIxtTHVb70J7_shClhr1ZQFNH4LAxh_vEk",
+    "q": "vqA9evTUANwMeuPRHYVtjVwy0MeWhC1OI4aJOGgK7PfcELpCmPn5uhLrBQeJBVGsnWFDpHWJRVXJyMxW2EUhS1PmrKuE0-DWYElnA57fHy5PyZ9EFGC3swznQjzyZnbvezDvhvmdKdAql48NlAPYKEFyxA-WYB4NSAt25K5lsxk",
+    "dp": "m_tpU8JuzqVHhM1_aDaektug4Gztf3v29pK9X1ReLEh8lx3ESRxNg6JxG7rWJTt45N_BB-y0kiDWTd5ma333sqGr72_OkaCNckB3dVc3ZNjLT1Ktn9iOLj08MO6Gj-IqPiP1Bq2VM3J37vGK3ycdXqpVj5mM0_Xz0pnNU5vCx8k",
+    "dq": "vK4WrHFQtlkX8Ts1bKb4vIaZtZUYIlRFl1w-zhoNVmgu5k-2Q3yJ9edrwFqpAR7KYCw5q7q62GoFhD7dZstmHQ06sYZDvwQ4rK16zVafOlm4l7SQyirBKPSIokN5Gnp2p9TUASFosk5dGg56PhtgBNhjJDTZfuG_-6N9VvRXrWE",
+    "qi": "OCujpxTMOSQzbsBTPAnH1vyagaSMsYt_FHNSTfLfw1qkE9TAi2eZM2XOzFl74RkGsHkfwNmFaLBC8rtZRLg0hWZAMrdH7NYHcHQCSxQtSspLVgPuiRBtccHEPzX-4C_rXxwPxhrF0XVKkixANzTUOb1IwSqkYyDDoal-mY7-7RM",
+}
 
-    Parameters
-    ----------
-    question : str
-        The jwt token
 
-    Returns
-    -------
-    str
-        The modified token with admin set to true
-    """
+# Generate or load private key
+if os.path.exists("private_key.pem"):
+    #t2 = time()
+    with open("private_key.pem", "rb") as f:
+        private_key = serialization.load_pem_private_key(f.read(), password=None)
+else:
+    private_key = jwt.algorithms.RSAAlgorithm.from_jwk(new_token)
+    with open("private_key.pem", "wb") as f:
+        f.write(
+            private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        )
 
-    # Manually saved (to reduce time) public/private key pair
-    new_token = {
-        "alg": "RS256",
-        "kty": "RSA",
-        "n": "rvhfkww7G2Plzu6oceAqXabHnD5Vm5ZHAqg_Q2f6mXzyl1AUP8SlzfVRKZDfxJvPKQ8fbONQhCoU4RSKdf8pXL0MG-Q5sh45E5dhOWvLQgb6Dbtb8EBLrpSmUowY39Vpx8MR-52fK3nBhNzNZCKwjEUea4mbyzormNtQbEQodb5HKqn7mM8KAhod8-4sh3cFi01320Atox-Ud1hhtj_WWGmXEHUKlODO5cPWFMXzI2w6cqxZJ6JMNLn0Z5hppyKquUtgQf2Vzl0HFEPsgF-RjyCUfXQ_GRF4dBP6tztqrYzFGcLZ2hqZLlg0ibSsGQOHHG1bx5dezaAGkhDRm-1uIQ",
-        "e": "AQAB",
-        "d": "ESHOseZDr1XjvZROt_-8Bjl7WAged8KKJ29z6lS3C-pZEonLwcaueXEoxkoiLu0Wpq2NZSsIyjgYnUVWnWEjmqoEEoMRRyiAbDOpWGb-mvN17nxG70pMXsa9Vl3TXa9W0TF_hESVvjsIwMqh7ckbwlBOPzdVItwKQshOops13vld8DvPNzmkbBL2Pnp7T39D0WSaaekiqJAo-xCDzGKvBNk7PDD8i7B4BWM-ptFYK4DCN0s2oxEQ1Qz-m0yPvRJ3luUytLxC0JSYDhirqZoOOgNYqWVKn4PU1oXC6rg1nT0qvHyeQJ738eJDer1Un3R-l7qEhjRjtwfv2RCtQqeqwQ",
-        "p": "6vmokKL9KghbVn0dbRQ0qYG1NbelK85ZqFgx3VnqkqqL2Iqb5Olp3ZN8D7kFmLEJyardPTOveKTb_2RlJuFg-OTSyPlAKnTewIlT9o28S3BZ9gsmjTnoiarkDlmvz2AxViGAMeo3HoIxtTHVb70J7_shClhr1ZQFNH4LAxh_vEk",
-        "q": "vqA9evTUANwMeuPRHYVtjVwy0MeWhC1OI4aJOGgK7PfcELpCmPn5uhLrBQeJBVGsnWFDpHWJRVXJyMxW2EUhS1PmrKuE0-DWYElnA57fHy5PyZ9EFGC3swznQjzyZnbvezDvhvmdKdAql48NlAPYKEFyxA-WYB4NSAt25K5lsxk",
-        "dp": "m_tpU8JuzqVHhM1_aDaektug4Gztf3v29pK9X1ReLEh8lx3ESRxNg6JxG7rWJTt45N_BB-y0kiDWTd5ma333sqGr72_OkaCNckB3dVc3ZNjLT1Ktn9iOLj08MO6Gj-IqPiP1Bq2VM3J37vGK3ycdXqpVj5mM0_Xz0pnNU5vCx8k",
-        "dq": "vK4WrHFQtlkX8Ts1bKb4vIaZtZUYIlRFl1w-zhoNVmgu5k-2Q3yJ9edrwFqpAR7KYCw5q7q62GoFhD7dZstmHQ06sYZDvwQ4rK16zVafOlm4l7SQyirBKPSIokN5Gnp2p9TUASFosk5dGg56PhtgBNhjJDTZfuG_-6N9VvRXrWE",
-        "qi": "OCujpxTMOSQzbsBTPAnH1vyagaSMsYt_FHNSTfLfw1qkE9TAi2eZM2XOzFl74RkGsHkfwNmFaLBC8rtZRLg0hWZAMrdH7NYHcHQCSxQtSspLVgPuiRBtccHEPzX-4C_rXxwPxhrF0XVKkixANzTUOb1IwSqkYyDDoal-mY7-7RM",
-    }
 
-    # split the token into parts by .
+def server_solver(question):
+
+    # split the question into parts by .
     parts = question.split(".")
     header = base64.b64decode(parts[0] + "=" * (-len(parts[0]) % 4))
     payload = base64.b64decode(parts[1] + "=" * (-len(parts[1]) % 4))
@@ -56,9 +69,11 @@ def server_solver(question: str) -> str:
     header["jwk"]["n"] = new_token["n"]
 
     # encode the new header and payload using the new jwk token that includes the private key
-    # jwt.encode(payload, new_token, algorithm="RS256", headers=header)
-    token = jwt.encode(header, payload, new_token)
-    return token.decode("utf-8")
+    # token = jwt.encode(header, payload, new_token).decode("utf-8")
+    token = jwt.encode(
+        headers=header, payload=payload, key=private_key, algorithm="RS256"
+    )
+    return token
 
 
 # don't forget to have a temp image named "img.png"

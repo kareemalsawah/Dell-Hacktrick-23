@@ -31,9 +31,9 @@ def solve(agent_id, riddle_type, solution):
         f"http://{server_ip}:5000/solve",
         json={"agentId": agent_id, "riddleType": riddle_type, "solution": solution},
     )
-    print(response)
     try:
-        print(response.json())
+        print(response)
+        #print(response.json())
     except Exception:
         print("Failed to parse json")
     return response
@@ -73,7 +73,7 @@ def submission_inference(riddle_solvers):
             break
 
         obv = get_obv_from_response(response)
-        print(response.json())
+        #print(response.json())
 
         if not response.json()["riddleType"] == None:
             try:
